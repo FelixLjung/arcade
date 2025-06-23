@@ -1,2 +1,2 @@
-double gameWidth = 600;
-double gameHeight = 480;
+double gameWidth = 1280;
+double gameHeight = 720;
