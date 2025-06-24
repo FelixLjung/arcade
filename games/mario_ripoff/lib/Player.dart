@@ -5,6 +5,8 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mario_ripoff/obsticle.dart';
+import 'dart:math';
+
 
 class Player extends RectangleComponent with CollisionCallbacks{
   Player() {
@@ -39,6 +41,8 @@ class Player extends RectangleComponent with CollisionCallbacks{
   
   bool collisionR = false;
   bool collisionL = false;
+  bool collisionT = false;
+  bool collisionB = false;
 
   @override
   FutureOr<void> onLoad() {
@@ -47,7 +51,6 @@ class Player extends RectangleComponent with CollisionCallbacks{
       KeyboardListenerComponent(
         keyDown: {
           LogicalKeyboardKey.keyA: (keysPressed) {
-            print("A");
             move(-1);
             return true;
           },
@@ -62,11 +65,11 @@ class Player extends RectangleComponent with CollisionCallbacks{
         },
         keyUp: {
           LogicalKeyboardKey.keyA: (keysPressed) {
-            resetMove();
+            resetMove(-1);
             return true;
           },
           LogicalKeyboardKey.keyD: (keysPressed) {
-            resetMove();
+            resetMove(1);
             return true;
           },
           LogicalKeyboardKey.space: (keysPressed) {
@@ -81,20 +84,22 @@ class Player extends RectangleComponent with CollisionCallbacks{
   }
 
   void move(double dir) {
-    print("moving with " + dir.toString());
-    // position.add(Vector2(dir * speed, 0));
+    if (direction == -dir) acc = 1;
     direction = dir;
   }
 
   void jump() {
-    // position.add(Vector2(0, -100));
+   
     jumpHeight = position.y - maxJumpHeight;
     jumping = true;
   }
 
-  void resetMove() {
-    direction = 0;
-    acc = 1;
+  void resetMove(int dir) {
+    if (direction == dir) {
+      acc = 1;
+      direction = 0;
+
+    }
   }
 
   @override
@@ -108,22 +113,28 @@ class Player extends RectangleComponent with CollisionCallbacks{
 
   void ApplyJump(double dt) {
     if (jumping) {
+      
       position.y -= jumpSpeed * dt * 1/jumpAcc;
       jumpAcc += dt*0.25;
-      print("Jumping" + jumpAcc.toString());
-      if (jumpAcc > 1.32)  {
-        jumping = false;
-        jumpAcc = 1;
-      }
+      // if (jumpAcc > 1.32)  {
+      //   jumping = false;
+      //   jumpAcc = 1;
+      // }
+      // if (collisionB == true)  {
+      //   print("aborting jump");
+      //   jumping = false;}
+
       // if (position.y < jumpHeight) {
       //   jumping = false;
       //   jumpAcc = 1;
       // }
+    } else {
+      jumpAcc = 1;
     }
   }
 
   void Gravity(double dt) {
-    if (position.y < 0) { // TODO: better ground detection
+    if (collisionB == false) { // TODO: better ground detection
       position.y += gravityConstant * dt * gravityAcc;
       gravityAcc+=dt*2;
     } else {
@@ -144,6 +155,7 @@ class Player extends RectangleComponent with CollisionCallbacks{
       if (direction < 0 && collisionL) return;
 
       Vector2 movement = Vector2(direction * speed * dt * acc, 0);
+      print(movement.x);
       position.add(movement);
       if (acc < maxAcc) acc += dt * 4;
     }
@@ -153,27 +165,54 @@ class Player extends RectangleComponent with CollisionCallbacks{
     @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
-    if (other is ScreenHitbox) {
-      //...
-    } else if (other is Obsticle) {
-      if (other.position.x > this.position.x) {
-        collisionR = true;
+    //print(intersectionPoints);
+    if (other is Obsticle) {
+      Vector2 p1 = intersectionPoints.elementAt(0);
+      Vector2 p2 = intersectionPoints.elementAt(1);
 
-      } else {
-        collisionL = true;
-      }
-      print("Player hit wall");
+      if ((p1.y - p2.y).abs() < 2) { // almost same y-value, therefor standing on ground
+        collisionB = true; 
+        jumping = false;
+  
+      } 
+
+      // if (other.position.x > this.position.x) {
+      //   collisionR = true;
+
+      // }
+      //  else {
+      //   collisionL = true;
+      // }
+
+      // if (other.position.y < this.position.y) {
+      //   collisionT = true;
+      // } else {
+      //   collisionB = true;
+      // }
+
+
+      // print("Player hit wall");
     }
   }
 
   @override
   void onCollisionEnd(PositionComponent other) {
     if (other is Obsticle) {
+
+
+
       if (other.position.x > this.position.x) {
         collisionR = false;
 
       } else {
         collisionL = false;
+      }
+
+      if (other.position.y < this.position.y) {
+        collisionT = false;
+      } else {
+        collisionB = false;
+        print("No bottom");
       }
     }
   }
