@@ -9,14 +9,14 @@ import 'dart:math';
 
 
 class Player extends RectangleComponent with CollisionCallbacks{
-  Player() {
-    this.position = Vector2(-250, 0);
+  Player(Vector2 spawnPosition) {
+    this.position = spawnPosition;
+    this.spawnPosition = spawnPosition;
     this.size = Vector2(100, 100);
     this.setColor(Colors.green);
 
   }
 
-  
 
   double direction = 0;
   double speed = 100;
@@ -43,6 +43,8 @@ class Player extends RectangleComponent with CollisionCallbacks{
   bool collisionL = false;
   bool collisionT = false;
   bool collisionB = false;
+  
+  late Vector2 spawnPosition;
 
   @override
   FutureOr<void> onLoad() {
@@ -105,10 +107,10 @@ class Player extends RectangleComponent with CollisionCallbacks{
   @override
   void update(double dt) {
     Gravity(dt);
-
     
     applyMove(dt);
     ApplyJump(dt);
+    super.update(dt);
   }
 
   void ApplyJump(double dt) {
@@ -116,18 +118,7 @@ class Player extends RectangleComponent with CollisionCallbacks{
       
       position.y -= jumpSpeed * dt * 1/jumpAcc;
       jumpAcc += dt*0.25;
-      // if (jumpAcc > 1.32)  {
-      //   jumping = false;
-      //   jumpAcc = 1;
-      // }
-      // if (collisionB == true)  {
-      //   print("aborting jump");
-      //   jumping = false;}
 
-      // if (position.y < jumpHeight) {
-      //   jumping = false;
-      //   jumpAcc = 1;
-      // }
     } else {
       jumpAcc = 1;
     }
@@ -155,7 +146,7 @@ class Player extends RectangleComponent with CollisionCallbacks{
       if (direction < 0 && collisionL) return;
 
       Vector2 movement = Vector2(direction * speed * dt * acc, 0);
-      print(movement.x);
+   
       position.add(movement);
       if (acc < maxAcc) acc += dt * 4;
     }
@@ -165,41 +156,41 @@ class Player extends RectangleComponent with CollisionCallbacks{
     @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollision(intersectionPoints, other);
-    //print(intersectionPoints);
+
+    if (other is ScreenHitbox) {
+  
+      respawn();
+    } 
+   
     if (other is Obsticle) {
       Vector2 p1 = intersectionPoints.elementAt(0);
       Vector2 p2 = intersectionPoints.elementAt(1);
-
+      // print(intersectionPoints.length);
       if ((p1.y - p2.y).abs() < 2) { // almost same y-value, therefor standing on ground
         collisionB = true; 
         jumping = false;
   
       } 
-
-      // if (other.position.x > this.position.x) {
-      //   collisionR = true;
-
-      // }
-      //  else {
-      //   collisionL = true;
-      // }
-
-      // if (other.position.y < this.position.y) {
-      //   collisionT = true;
-      // } else {
-      //   collisionB = true;
-      // }
+      if ((p1.x - p2.x).abs() < 2) { // almost same x-value, hitting side
+          if (this.position.x < p1.x) {
+            collisionR = true;
+          } else {
+            collisionL = true;
+          }
+      }
 
 
-      // print("Player hit wall");
+
+
+  
     }
+
+
   }
 
   @override
   void onCollisionEnd(PositionComponent other) {
     if (other is Obsticle) {
-
-
 
       if (other.position.x > this.position.x) {
         collisionR = false;
@@ -212,10 +203,22 @@ class Player extends RectangleComponent with CollisionCallbacks{
         collisionT = false;
       } else {
         collisionB = false;
-        print("No bottom");
+        // print("No bottom");
       }
     }
   }
+  
+  void respawn() {
+    acc = 1;
+    jumpAcc = 1;
+    direction = 0;
+    gravityAcc = 1;
+    position = spawnPosition;
+    jumping = false;
+
+  }
+  
+
 
 }
 
