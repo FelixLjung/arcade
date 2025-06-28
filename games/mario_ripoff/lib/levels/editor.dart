@@ -8,7 +8,7 @@ import 'package:mario_ripoff/obsticle.dart';
 class Editor extends RectangleComponent with PointerMoveCallbacks {
   late GameWorld world;
 
-  late Obsticle currentObs;
+  Obsticle? currentObs = null;
   late bool moving = false;
 
   Editor(GameWorld world) {
@@ -18,7 +18,7 @@ class Editor extends RectangleComponent with PointerMoveCallbacks {
 
   Future<void> spawnObsticle(double x, double y) async {
     // await world.addToWorld(Obsticle(x, y, width, height));
-    Obsticle(x, y, 250, 50).addToParent(world);
+    Obsticle(x, y, 250, 50, this).addToParent(world);
     print("adding obs to $x, $y");
   }
 
@@ -41,7 +41,6 @@ class Editor extends RectangleComponent with PointerMoveCallbacks {
 
   void release() {
     moving = false;
-    
   }
 
   Obsticle? touchedObsticle(Vector2 coords) {
@@ -61,19 +60,25 @@ class Editor extends RectangleComponent with PointerMoveCallbacks {
     return Vector2((x - gameWidth / 2), y - gameHeight / 2);
   }
 
-    Vector2 convertCoordinatesV2(Vector2 coords) {
+  Vector2 convertCoordinatesV2(Vector2 coords) {
     return Vector2((coords.x - gameWidth / 2), coords.y - gameHeight / 2);
   }
-
-  
 
   @override
   void update(double dt) {}
 
   void move(Vector2 localPosition) {
-if (moving) {
-      Vector2 pos = convertCoordinatesV2(localPosition);
-      currentObs.position = pos;
+    print("${moving} and ${currentObs}");
+    if (moving && currentObs != null) {
+      // Vector2 pos = convertCoordinatesV2(localPosition);
+      currentObs?.position+=localPosition;
+      print("Moving object");
     }
+  }
+
+  void setObsticle(Obsticle obs) {
+    currentObs = obs;
+    moving = true;
+    print("Setting obsticle");
   }
 }
