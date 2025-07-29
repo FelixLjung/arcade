@@ -37,7 +37,7 @@ class MainGame extends FlameGame
     @override
   void onTapDown(TapDownEvent event) {
     print("Down");
-    editor.press(event);
+    // editor.press(event); // TODO: testar nytt system
   }
 
   @override
@@ -55,8 +55,8 @@ class MainGame extends FlameGame
   @override
   void onPanUpdate(DragUpdateInfo info) {
     // This will be called continuously while dragging, even if a tap is held.
-    print(info.eventPosition.global);
-    editor.move(info.eventPosition.widget);
+    print(info.delta.global);
+    editor.move(info.delta.global);
   }
 
   @override
